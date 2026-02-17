@@ -18,7 +18,8 @@ while (!File.Exists(pathExecute))
     Console.WriteLine("Invaild! Try again!");
     pathExecute = Console.ReadLine();
 }
-Encrypte(stream, Path.GetRelativePath(path, pathExecute));
+
+Encrypte(stream, Path.GetRelativePath(Directory.GetParent(path).FullName, pathExecute));
 
 //Or create your own encryptor
 void Encrypte(MemoryStream fileData, string executePath)
@@ -30,9 +31,5 @@ void Encrypte(MemoryStream fileData, string executePath)
         bin.Write(executePath);
         bin.Write(bytes);
     }
-    bytes = fileData.ToArray();
-
-    fileData = new MemoryStream();
-    new MemoryStream(bytes).CopyTo(new GZipStream(fileData, CompressionLevel.Fastest, true));
     File.WriteAllBytes(Path.Combine(Directory.GetCurrentDirectory(), "Result.execution"), fileData.ToArray());
 }
