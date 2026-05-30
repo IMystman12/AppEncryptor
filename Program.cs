@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using System.Security.Cryptography;
 
 Console.WriteLine("Path:");
 string path = Console.ReadLine();
@@ -24,12 +25,65 @@ Encrypte(stream, Path.GetRelativePath(Directory.GetParent(path).FullName, pathEx
 //Or create your own encryptor
 void Encrypte(MemoryStream fileData, string executePath)
 {
-    byte[] bytes = fileData.ToArray();
+    int seed = Random.Shared.Next();
+    Random rng = new Random(seed);
+    ExtraUtils eu = new ExtraUtils();
+    byte[] keys = eu.Reverse(eu.ShiftDecrypt(eu.XorCrypt(eu.GenerateKey(), (byte)rng.Next()), rng.Next()))
+      , IV = eu.Reverse(eu.ShiftDecrypt(eu.XorCrypt(eu.GenerateIV(), (byte)rng.Next()), rng.Next()));
+
+    byte[] bytes = eu.AESEncrypt(fileData.ToArray(), keys, IV);
     fileData = new MemoryStream();
+    int length = 99;
+    byte[] aHeader = new byte[length];
+    for (int i = 0; i < length; i++)
+    {
+        aHeader[i] = (byte)new Random().Next();
+    }
+
     using (BinaryWriter bin = new BinaryWriter(fileData))
     {
+        for (int i = 0; i < length; i++)
+        {
+            aHeader[i] = (byte)new Random().Next();
+        }
+        bin.Write(aHeader);
+
         bin.Write(executePath);
+        bin.Write(seed);
+
+        for (int i = 0; i < length; i++)
+        {
+            aHeader[i] = (byte)new Random().Next();
+        }
+        bin.Write(aHeader);
+
+        bin.Write(bytes.Length);
         bin.Write(bytes);
+
+        for (int i = 0; i < length; i++)
+        {
+            aHeader[i] = (byte)new Random().Next();
+        }
+        bin.Write(aHeader);
+
+        bin.Write(keys.Length);
+        bin.Write(keys);
+
+        for (int i = 0; i < length; i++)
+        {
+            aHeader[i] = (byte)new Random().Next();
+        }
+        bin.Write(aHeader);
+
+        bin.Write(IV.Length);
+        bin.Write(IV);
+
+        for (int i = 0; i < length; i++)
+        {
+            aHeader[i] = (byte)new Random().Next();
+        }
+        bin.Write(aHeader);
     }
-    File.WriteAllBytes(Path.Combine(Directory.GetCurrentDirectory(), "Result.execution"), fileData.ToArray());
+
+    File.WriteAllBytes(Path.Combine(Directory.GetCurrentDirectory(), "Result.execution"), eu.Reverse(eu.ShiftDecrypt(eu.XorCrypt(fileData.ToArray(), (byte)rng.Next()), rng.Next())));
 }
