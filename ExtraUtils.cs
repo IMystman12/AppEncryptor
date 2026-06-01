@@ -2,6 +2,7 @@
 
 public class ExtraUtils
 {
+    static ExtraUtils Instance = new ExtraUtils();
     public byte[] XorCrypt(byte[] bytes, byte key)
     {
         for (int i = 0; i < bytes.Length; i++)
@@ -89,4 +90,17 @@ public class ExtraUtils
             }
         }
     }
+
+    public void WriteBytes(BinaryWriter bw, byte[] bytes)
+    {
+        bw.Write(bytes.Length);
+        bw.Write(bytes);
+    }
+    public byte[] ReadBytes(BinaryReader br)
+    {
+        byte[] bytes = new byte[br.ReadInt32()];
+        bytes = br.ReadBytes(bytes.Length);
+        return bytes;
+    }
+    public const int standardHeaderLength = 9;
 }
